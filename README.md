@@ -1,5 +1,15 @@
 # Casualties Unknown Mods
 
+## Early Wall Jump v1.0.0
+
+Keeps vanilla's **one wall jump per side**, but lets you jump when you're within **half a tile** of the wall—even if you've already reversed direction.
+
+**[Download DLL](downloads/EarlyWallJump.dll)** · [Install ZIP](downloads/EarlyWallJump-v1.0.0.zip) · [Details and settings](docs/EarlyWallJump.md)
+
+Use this **instead of Three Wall Jumps**: close the game, remove ThreeWallJumps.dll (including renamed copies) from `BepInEx/plugins`, then put EarlyWallJump.dll there. On the GitHub file page, click **Download raw file**.
+
+Default reach: `ReachTiles = 0.5` in `BepInEx/config/local.casualtiesunknown.earlywalljump.cfg`. Close and restart the game after changing it.
+
 ## Three Wall Jumps v1.0.3
 
 A BepInEx plugin for **Casualties Unknown 1.0.2** that allows **three consecutive wall jumps from the same side**.

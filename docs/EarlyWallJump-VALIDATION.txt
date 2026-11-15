@@ -1,0 +1,28 @@
+Early Wall Jump v1.0.0 validation
+
+Target: Casualties Unknown 1.0.2 / BepInEx 5.4.23.5 / Unity 2022.3.62 Mono.
+Compiled against the supplied Assembly-CSharp/BepInEx/Harmony and matching
+UnityEngine reference modules, including Physics2D.
+WorldToBlockPos in the supplied game assembly uses one world unit per tile.
+Default maximum proximity gap: 0.5 tiles from the character collider edge.
+
+PASS: 65 assertions against the compiled plugin and supplied Harmony under
+Mono 6.12. Uses the inspected vanilla gate in a small game stand-in and a
+controlled physics provider for hit distances/normals.
+PASS: every injected game field name/type matches the actual game DLL.
+PASS: prefix/finalizer installation and actual OnDestroy hook survival.
+PASS: BepInEx incompatibility with Three Wall Jumps and no native imports.
+PASS: reversed movement input before contact still allows the nearby wall jump.
+PASS: 0.499/0.5/0.501 tile boundaries, nearest eligible side, repeated alternating
+walls, and blocking an extra jump on the same side.
+PASS: original timer values restored after success and original-method errors.
+PASS: empty air, floor/ceiling normals, and trigger volumes do not grant jumps.
+PASS: vanilla real-contact grace, ground/coyote jumps, swimming, climbing,
+cooldown and movement restrictions, NPCs, and climbing-claw benefits.
+PASS: configured reach and zero-reach fallback.
+PASS: original/physics error logging and fallback behavior.
+PASS: install ZIP readback contains exactly the compiled DLL.
+
+LIMITATION: the actual Unity physics engine and game world were not launched.
+Real collider geometry and the feel of a half-tile reach still need an in-game
+test. No proprietary game or BepInEx dependencies are redistributed.
