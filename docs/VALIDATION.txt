@@ -1,4 +1,21 @@
-PASS: 65 behavior assertions against the compiled DLL
-PASS: patch anchors match the uploaded game assembly
-PASS: compiled Harmony transpiler applied to parsed original Jump IL (no live detour)
-TOTAL PASS: 74 assertions; no live Unity/gameplay test performed.
+Three Wall Jumps v1.0.1 validation
+
+PASS: compiled against the uploaded game and BepInEx/Harmony DLLs plus Unity
+2022.3.62 reference modules.
+PASS: 60 runtime integration assertions under Mono 6.12 using the supplied
+Harmony runtime and the actual compiled mod, with a simplified game stand-in.
+PASS: all injected game field names and types match Assembly-CSharp.dll.
+PASS: explicit patch installer registered and verified all four owned hooks.
+PASS: repeated 3-right/3-left cycles and fourth-jump rejection.
+PASS: contact-only resets, landing reset, no reset on leaving/retouching same wall.
+PASS: failed/no-contact attempts, NPC behavior, unlimited climbing claws.
+PASS: Unity native-object identity and restoration after original-method errors.
+PASS: accepted-jump log count matches total; player/missing-contact/limit/error
+messages are emitted through the BepInEx logging source.
+
+Limitations: game/Unity stand-ins replace the live engine and world. No running
+gameplay or Windows console UI test was possible here. The original v1.0.0
+failure has not been reproduced in the actual game; user confirmation is needed.
+The Windows console uses CONOUT$, WriteConsoleW and SetConsoleTextAttribute;
+its color/window behavior needs validation on Windows. No game or BepInEx
+assemblies are included in the distributed package.
