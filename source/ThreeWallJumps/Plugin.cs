@@ -11,7 +11,7 @@ namespace ThreeWallJumps
     public sealed class Plugin : BaseUnityPlugin
     {
         internal const string Id = "local.casualtiesunknown.threewalljumps";
-        internal const string Version = "1.0.1";
+        internal const string Version = "1.0.2";
         private Harmony harmony;
 
         private void Awake()
@@ -40,9 +40,11 @@ namespace ThreeWallJumps
 
         private void OnDestroy()
         {
-            harmony?.UnpatchSelf();
-            ModLog.Info("Three Wall Jumps stopped; patches removed.");
-            ModLog.Close();
+            // This game destroys the loader's Unity component during startup,
+            // before a run begins. Harmony hooks and ModLog's static console/log
+            // state must outlive that component. They belong to the game process;
+            // the OS releases the console/handle when the process exits.
+            ModLog.Info("Loader component destroyed; gameplay patches and live console retained for the game session.");
         }
     }
 

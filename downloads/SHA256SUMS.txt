@@ -1,2 +1,2 @@
-5b9d75fb1c658fd0398caa821df18013c5e1aee14d59be922638d0ae0edc6ffa  ThreeWallJumps.dll
-109ab560f9a617fe28bcbfc51b8ce000d14160bd5388d2f0fec1c09182592e67  ThreeWallJumps-v1.0.1.zip
+74d91ef7f4f7298b14ec2406c6eebf52fa1ac10f48854cba6d517c6cdda73d3f  ThreeWallJumps.dll
+192b4981e2774ebe0f082b0e5501f6b10589df22a14b2d5964ab982dd2bbb3b1  ThreeWallJumps-v1.0.2.zip

@@ -14,6 +14,7 @@ parser.add_argument("--game-assembly", type=Path, required=True)
 parser.add_argument("--dotnet", default="dotnet")
 parser.add_argument("--mono", default="mono")
 parser.add_argument("--mono-config", type=Path)
+parser.add_argument("--expect-lifecycle-failure", action="store_true", help="Reproduce the known v1.0.1 startup cleanup failure")
 args = parser.parse_args()
 sources = Path(__file__).resolve().parent
 sdk_line = subprocess.check_output([args.dotnet, "--list-sdks"], text=True).strip().splitlines()[-1]
@@ -43,4 +44,6 @@ with tempfile.TemporaryDirectory(prefix="three-wall-jumps-test-") as temporary:
     if args.mono_config:
         command += ["--config", str(args.mono_config.resolve())]
     command += [str(work / "RuntimeTest.exe"), str(args.game_assembly.resolve())]
+    if args.expect_lifecycle_failure:
+        command += ["--expect-lifecycle-failure"]
     subprocess.run(command, cwd=work, env=os.environ.copy(), check=True)

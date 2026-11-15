@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using System.Linq;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using BepInEx.Logging;
 using Mono.Cecil;
 using HarmonyLib;
@@ -15,7 +16,7 @@ class RuntimeTest {
   log.LogEvent+=(sender,e)=>events.Add(e);
   a.GetType("ThreeWallJumps.ModLog").GetMethod("Initialize",BindingFlags.Static|BindingFlags.NonPublic)
     .Invoke(null,new object[]{log,false,true});
-  if(args.Length==1) {
+  if(args.Length>=1) {
    using(var game=AssemblyDefinition.ReadAssembly(args[0]))
    using(var mod=AssemblyDefinition.ReadAssembly("ThreeWallJumps.dll")) {
     var gameBody=game.MainModule.Types.Single(t=>t.Name=="Body");
@@ -35,6 +36,31 @@ class RuntimeTest {
   var info=Harmony.GetPatchInfo(typeof(Body).GetMethod("Jump"));
   Check(info!=null && info.Prefixes.Count==1 && info.Postfixes.Count==1 && info.Finalizers.Count==1,"Four-hook installer did not attach Jump hooks");
   Console.WriteLine("Verified runtime patch registration: Jump prefix/postfix/finalizer + contact postfix");
+  // Reproduce the real startup event seen in the user's BepInEx log. Use the
+  // compiled plugin's actual OnDestroy callback rather than a second version.
+  var pluginType=a.GetType("ThreeWallJumps.Plugin");
+  var component=FormatterServices.GetUninitializedObject(pluginType);
+  pluginType.GetField("harmony",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(component,harmony);
+  var consoleType=a.GetType("ThreeWallJumps.LiveConsole");
+  object consoleSentinel=FormatterServices.GetUninitializedObject(consoleType);
+  var consoleField=a.GetType("ThreeWallJumps.ModLog").GetField("console",BindingFlags.Static|BindingFlags.NonPublic);
+  consoleField.SetValue(null,consoleSentinel);
+  pluginType.GetMethod("OnDestroy",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(component,null);
+  info=Harmony.GetPatchInfo(typeof(Body).GetMethod("Jump"));
+  bool jumpAttached=info!=null && info.Prefixes.Any(p=>p.owner==harmony.Id) && info.Postfixes.Any(p=>p.owner==harmony.Id) && info.Finalizers.Any(p=>p.owner==harmony.Id);
+  var contactInfo=Harmony.GetPatchInfo(typeof(Body).GetMethod("HandleGroundedState",BindingFlags.Instance|BindingFlags.NonPublic));
+  bool contactAttached=contactInfo!=null && contactInfo.Postfixes.Any(p=>p.owner==harmony.Id);
+  bool consoleRetained=ReferenceEquals(consoleField.GetValue(null),consoleSentinel);
+  consoleField.SetValue(null,null);
+  if(args.Length>=2 && args[1]=="--expect-lifecycle-failure") {
+   Check(!jumpAttached && !contactAttached && !consoleRetained,"Expected v1.0.1 lifecycle failure was not reproduced");
+   Console.WriteLine("REPRODUCED v1.0.1: plugin destruction removes jump/contact hooks and clears the console.");
+   return;
+  }
+  Check(jumpAttached,"Plugin destruction removed jump hooks");
+  Check(contactAttached,"Plugin destruction removed contact hook");
+  Check(consoleRetained,"Plugin destruction closed the live console");
+  Console.WriteLine("Verified hooks and console survive the actual plugin OnDestroy callback");
   var body=new Body(); PlayerCamera.main=new PlayerCamera {body=body};
   foreach(int side in new[]{1,-1,1,-1}) {
    for(int i=1;i<=3;i++) {

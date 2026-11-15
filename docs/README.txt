@@ -1,10 +1,10 @@
-Three Wall Jumps v1.0.1
+Three Wall Jumps v1.0.2
 Casualties Unknown 1.0.2 / BepInEx 5.4.23.5 / Windows Unity Mono
 
 INSTALL / UPDATE
 Close the game. Copy BepInEx/plugins/ThreeWallJumps.dll into your game's
-BepInEx/plugins folder, replacing v1.0.0. Remove duplicate old copies.
-The startup log should identify Three Wall Jumps 1.0.1 and say ACTIVE:
+BepInEx/plugins folder, replacing older builds. Remove duplicates, including ThreeWallJumps(1).dll.
+The startup log should identify Three Wall Jumps 1.0.2 and say ACTIVE:
 verified Jump prefix/postfix/finalizer and wall-contact postfix.
 
 BEHAVIOR
@@ -26,14 +26,20 @@ Minimize it, or disable it with ShowConsole = false in:
 LogJumpAttempts = false reduces event logging. Restart after config changes.
 Logs are also written through BepInEx to BepInEx/LogOutput.log.
 
-VALIDATION / DIAGNOSTICS
-v1.0.0 was reported to load but retain vanilla jumping. The exact in-game
-cause remains unconfirmed. This build reworks the hooks and adds diagnostics.
-60 Mono checks passed against a simplified game stand-in with the actual
-supplied Harmony DLL. Field bindings match the uploaded game assembly.
-This is not a live Unity/gameplay test; the Windows console UI is also untested.
-If it still fails, send a new LogOutput.log after attempting wall jumps.
-Look for ACTIVE, PLAYER DETECTED, REGISTERED, WAITING, LIMIT, or ERROR.
+STARTUP FIX / VALIDATION
+The v1.0.1 log confirmed that startup destroyed the mod's loader component.
+Its OnDestroy cleanup then removed the hooks and closed the console.
+v1.0.2 retains both for the game session. The process releases console resources
+when the game exits. The log may say:
+  Loader component destroyed; gameplay patches and live console retained...
+This is expected and no longer disables the mod.
+
+The new lifecycle regression test reproduced the v1.0.1 failure, then verified
+that the actual compiled v1.0.2 callback preserves hooks and console state.
+63 Mono checks passed, including jump behavior after component destruction.
+Field bindings match the uploaded game assembly. Tests use a game stand-in;
+live gameplay and the native Windows console still need an in-game test.
+If it still fails, send a fresh LogOutput.log after attempting wall jumps.
 
 UNINSTALL
 Close the game and delete ThreeWallJumps.dll from BepInEx/plugins.
