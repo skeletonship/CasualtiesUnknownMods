@@ -1,69 +1,49 @@
 # Casualties Unknown Mods
 
-## Three Wall Jumps v1.0.2
+## Three Wall Jumps v1.0.3
 
 A BepInEx plugin for **Casualties Unknown 1.0.2** that allows **three consecutive wall jumps from the same side**.
 
-**Right wall ×3 → left wall ×3 → right wall ×3 → left wall ×3**, as often as needed.
-
-Moving into the opposite wall resets the count immediately, even if you do not jump from that wall. Leaving and retouching the same side does not reset it. Landing, climbing, and swimming also reset it as appropriate to the game.
+**Right wall ×3 → left wall ×3 → right wall ×3**, repeatedly. Contact with the opposite wall resets the count, even without jumping from it. Leaving and retouching the same side does not reset it. Landing, climbing, and swimming also reset it as appropriate to the game.
 
 ### Download and install
 
-1. Download [ThreeWallJumps.dll](downloads/ThreeWallJumps.dll). On its GitHub file page, click **Download raw file**.
-2. Close the game and put the DLL into **`BepInEx\plugins`** in the game folder.
-3. Launch the game. `BepInEx\LogOutput.log` should report **Three Wall Jumps 1.0.2 starting**.
+1. Download [ThreeWallJumps.dll](downloads/ThreeWallJumps.dll). On the file page, click **Download raw file**.
+2. Close the game and replace your old DLL in **`BepInEx\plugins`**. Remove duplicate old copies, including renamed downloads such as `ThreeWallJumps(1).dll`.
+3. Launch the game. `BepInEx/LogOutput.log` should identify **Three Wall Jumps 1.0.3** and report **ACTIVE: verified...**.
 
-Alternatively, download [the install ZIP](downloads/ThreeWallJumps-v1.0.2.zip) and copy its `BepInEx` folder into the game folder.
+Alternatively, download [the install ZIP](downloads/ThreeWallJumps-v1.0.3.zip) and copy its `BepInEx` folder into the game folder.
 
-Requires an existing **BepInEx 5** installation. Built against BepInEx **5.4.23.5**, the supplied game assembly, and Unity **2022.3.62** reference modules.
+Requires BepInEx 5. Built against BepInEx **5.4.23.5**, the supplied game assembly, and Unity **2022.3.62** reference modules.
 
-Use the normal movement and jump controls, pushing toward a wall to make contact. The mod preserves jump force, cooldown, stamina costs, injury effects, and climbing claws' existing unlimited-jump benefit. It applies to the current player body. The live console is enabled by default; no hotkeys are required.
+### Console removed
 
-To uninstall, close the game and delete `BepInEx\plugins\ThreeWallJumps.dll`.
+**v1.0.3 removes the testing console entirely.** It does not allocate a console, open a window, or write colored console output. Existing `ShowConsole` settings are ignored. The working jump hooks and startup-lifetime fix from v1.0.2 are retained.
 
-### Live console
+Startup messages and errors still use normal BepInEx logging in `BepInEx/LogOutput.log`. Optional per-jump diagnostics use `LogJumpAttempts` in `BepInEx/config/local.casualtiesunknown.threewalljumps.cfg`. This defaults to `false` for new configurations; an existing value is preserved. Set it to `false` if you want less file logging. Any separately enabled BepInEx console is controlled by BepInEx itself.
 
-A Windows console opens automatically when the mod starts (or the existing BepInEx console is reused). It shows:
+### Gameplay
 
-- **ACTIVE** only after all four runtime hooks have been verified.
-- **PLAYER DETECTED** when a hook recognizes the player.
-- **Green REGISTERED events** with the current wall count (`RIGHT 1/3`, `2/3`, `3/3`) and session total.
-- Wall contact and budget-reset events, plus reasons such as missing contact or a reached limit.
-- **Red ERROR messages** for installation failures, hook failures, and exceptions from the original jump method.
+Use the normal movement and jump controls, pushing toward a wall to make contact. The mod preserves jump force, cooldown, stamina/injury costs, and climbing claws' existing unlimited-jump benefit. It applies to the current player body. There are no hotkeys.
 
-For a newly opened console, the window title also shows the current side, budget, and total. It is a live log window, not an interactive command prompt. You can minimize it. To disable it, close the game and set `ShowConsole = false` in `BepInEx/config/local.casualtiesunknown.threewalljumps.cfg`. `LogJumpAttempts = false` reduces event logging. Restart after changing settings. Events and errors also go to `BepInEx/LogOutput.log`.
+The loader's Unity component is destroyed during startup in this game. The hooks intentionally remain active for the game process after that event. The log message **Loader component destroyed; gameplay patches retained for the game session.** is expected.
 
-### Update from older builds
+To uninstall, close the game and delete the mod DLL from `BepInEx/plugins`.
 
-Close the game and **replace the old DLL** with v1.0.2. Remove older copies, including renamed downloads such as `ThreeWallJumps(1).dll`, from all plugin subfolders. Keep just one current copy.
+### Validation
 
-The BepInEx log should identify **Three Wall Jumps 1.0.2**, report **ACTIVE: verified...**, and may then report **Loader component destroyed; gameplay patches and live console retained for the game session.** That last message is expected: the hooks and live console now remain active for the lifetime of the game process.
+The user confirmed v1.0.2 working in-game, including three jumps, fourth-jump rejection, and wall-switch resets. v1.0.3 only removes the extra console/status output and changes the default verbosity for new configurations.
 
-### Confirmed startup fix in v1.0.2
+**63 offline Mono checks pass** against the compiled v1.0.3 with the supplied Harmony DLL and a game stand-in. They cover patch installation, hook survival after the real `OnDestroy` callback, jump limits/resets, failed attempts, and BepInEx logging. They also verify the extra console class/state is absent. Field bindings match the uploaded game DLL. See [validation](docs/VALIDATION.txt) and [runnable checks](tests).
 
-The supplied v1.0.1 log showed successful patch installation followed immediately by **Three Wall Jumps stopped; patches removed.**, before the run began. The loader's Unity component was destroyed during startup, and the mod's `OnDestroy` cleanup removed its gameplay hooks and closed its console. This explains both the disappearing console and vanilla jumping in that run.
-
-v1.0.2 retains the Harmony patches and static console/log state when the loader component is destroyed. The process releases the console resources on game exit. No extra persistent Unity component is required.
-
-### Testing and troubleshooting
-
-A new regression test invokes the **compiled plugin's actual `OnDestroy` callback**. It reproduced v1.0.1 removing the jump/contact hooks and clearing the console reference. The fixed build keeps all four hooks and the console reference alive, then passes the jump tests after that destruction event.
-
-**63 checks passed under Mono** with the supplied Harmony DLL and compiled v1.0.2, using a small game stand-in. These include lifecycle survival, jump limits/resets, exception paths, counter logging, and error logging. Injected field names/types also match the actual uploaded game assembly. See [the validation record](docs/VALIDATION.txt) and [runnable test sources](tests).
-
-**A running-game test and a Windows console UI test are still needed.** The standalone test replaces the real Unity engine/world and checks console lifetime without creating a native Windows window.
-
-Unequip climbing claws, jump three times from one wall, and verify a fourth jump fails. Reach the opposite wall and repeat. If behavior is wrong, send the new `BepInEx/LogOutput.log` after trying several jumps. The `PLAYER DETECTED`, `REGISTERED`, `WAITING`, and `LIMIT` messages identify the execution path.
+The offline checks do not replace a running Unity game. For troubleshooting, send a new `BepInEx/LogOutput.log` after trying wall jumps.
 
 ### Source and rebuilding
 
-The [source project](source/ThreeWallJumps) targets `netstandard2.1`. With a .NET SDK installed, run from the repository folder:
+The [source project](source/ThreeWallJumps) targets `netstandard2.1`. With a .NET SDK installed, run:
 
 ```powershell
 dotnet build source/ThreeWallJumps/ThreeWallJumps.csproj -c Release -p:GameDir="C:\path\to\Casualties Unknown"
 ```
 
-Adjust the project reference paths if the game's Data folder has a different name. Output: `source/ThreeWallJumps/bin/Release/netstandard2.1/ThreeWallJumps.dll`.
-
-Game assemblies and BepInEx dependencies are not included. [SHA-256 checksums](downloads/SHA256SUMS.txt) identify the compiled downloads.
+Adjust Data-folder reference paths if needed. Output: `source/ThreeWallJumps/bin/Release/netstandard2.1/ThreeWallJumps.dll`. Game/BepInEx reference assemblies are not redistributed. [SHA-256 checksums](downloads/SHA256SUMS.txt) identify current downloads.

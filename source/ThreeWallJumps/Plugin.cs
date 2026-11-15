@@ -11,40 +11,35 @@ namespace ThreeWallJumps
     public sealed class Plugin : BaseUnityPlugin
     {
         internal const string Id = "local.casualtiesunknown.threewalljumps";
-        internal const string Version = "1.0.2";
+        internal const string Version = "1.0.3";
         private Harmony harmony;
 
         private void Awake()
         {
-            bool showConsole = Config.Bind("Diagnostics", "ShowConsole", true,
-                "Open a live status console. An existing BepInEx console is reused. Restart the game after changing this setting.").Value;
-            bool logAttempts = Config.Bind("Diagnostics", "LogJumpAttempts", true,
+            bool logAttempts = Config.Bind("Diagnostics", "LogJumpAttempts", false,
                 "Log changes in jump eligibility, accepted wall jumps, and wall resets.").Value;
-            ModLog.Initialize(Logger, showConsole, logAttempts);
+            ModLog.Initialize(Logger, logAttempts);
             ModLog.Info("Three Wall Jumps " + Version + " starting. Waiting for player...");
             try
             {
                 harmony = new Harmony(Id);
                 WallJumpPatches.Install(harmony);
                 ModLog.Info("ACTIVE: verified Jump prefix/postfix/finalizer and wall-contact postfix.");
-                ModLog.Info("3 RIGHT -> 3 LEFT -> 3 RIGHT. Counters track accepted wall jumps; errors appear in red.");
-                ModLog.SetStatus("ACTIVE | waiting for player | total wall jumps: 0");
+                ModLog.Info("3 RIGHT -> 3 LEFT -> 3 RIGHT. Logging through BepInEx; no extra console window.");
             }
             catch (Exception exception)
             {
                 harmony?.UnpatchSelf();
                 ModLog.Error("DISABLED: failed to install/verify patches. " + exception);
-                ModLog.SetStatus("ERROR | patches disabled (see red error log)");
             }
         }
 
         private void OnDestroy()
         {
             // This game destroys the loader's Unity component during startup,
-            // before a run begins. Harmony hooks and ModLog's static console/log
-            // state must outlive that component. They belong to the game process;
-            // the OS releases the console/handle when the process exits.
-            ModLog.Info("Loader component destroyed; gameplay patches and live console retained for the game session.");
+            // before a run begins. Harmony hooks and static logging state must
+            // outlive that component for the entire game process.
+            ModLog.Info("Loader component destroyed; gameplay patches retained for the game session.");
         }
     }
 
@@ -114,8 +109,6 @@ namespace ThreeWallJumps
         }
 
         internal static string SideName(int side) => side > 0 ? "RIGHT" : side < 0 ? "LEFT" : "NONE";
-        internal static void Status(PlayerJumpState state) =>
-            ModLog.SetStatus("ACTIVE | " + SideName(state.Budget.Side) + " " + state.Budget.Used + "/3 | total wall jumps: " + TotalWallJumps);
 
         internal static void RecordWallJump(Body body, bool right)
         {
@@ -124,7 +117,6 @@ namespace ThreeWallJumps
             if (TotalWallJumps < int.MaxValue) TotalWallJumps++;
             state.LastReason = null;
             ModLog.Event("REGISTERED: " + SideName(state.Budget.Side) + " " + state.Budget.Used + "/3 | total wall jumps: " + TotalWallJumps);
-            Status(state);
         }
 
         internal static void UpdateContact(Body body, bool left, bool right)
@@ -147,7 +139,6 @@ namespace ThreeWallJumps
                     ModLog.Event("CONTACT: " + SideName(side) + " | reset to 0/3.");
                 }
             }
-            Status(state);
         }
     }
 

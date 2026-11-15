@@ -1,28 +1,21 @@
-Three Wall Jumps v1.0.2 validation
+Three Wall Jumps v1.0.3 validation
 
-CONFIRMED from user LogOutput.log: v1.0.1 installed all four hooks, then its
-OnDestroy callback logged "Three Wall Jumps stopped; patches removed." before
-the run began. That callback also closed the live console.
-REPRODUCED with the archived compiled v1.0.1 under Mono: invoking the real
-OnDestroy callback removes jump/contact hooks and clears ModLog's console.
+BASELINE: user confirmed v1.0.2 working in-game: same-side repeated jumps,
+three-jump limit, wall-switch reset, and stable runtime hooks.
+CHANGE: removed the optional native Windows console, its P/Invoke wrapper,
+console state/status output, and ShowConsole configuration binding. Existing
+ShowConsole values have no effect. Startup/errors use ordinary BepInEx logging.
+Per-jump file diagnostics default off for new configs; existing values remain.
 
-PASS: compiled v1.0.2 against the uploaded game and BepInEx/Harmony DLLs,
-using Unity 2022.3.62 reference modules.
-PASS: 63 runtime integration assertions under Mono 6.12, supplied Harmony,
-and the actual compiled plugin with a simplified game stand-in.
-PASS: every injected field name and type matches the uploaded game assembly.
-PASS: explicit installer registered and verified all four owned hooks.
-PASS: actual plugin OnDestroy retains Jump prefix/postfix/finalizer, contact
-postfix, and the static console reference.
-PASS: jump tests run after that destruction event: repeated 3-right/3-left
-cycles, fourth-jump rejection, contact-only and landing resets, no reset when
-leaving/retouching the same wall, failed/no-contact attempts, NPC behavior,
-and unlimited climbing-claw behavior.
-PASS: Unity native-object identity, original-exception propagation, temporary
-allowance restoration, accepted-jump counts, and diagnostic/error log events.
+PASS: compiled against supplied game/BepInEx/Harmony and Unity 2022.3.62 refs.
+PASS: 63 offline integration assertions with Mono 6.12, supplied Harmony,
+and the compiled plugin operating on a game stand-in.
+PASS: field bindings match the actual uploaded Assembly-CSharp.dll.
+PASS: all four owned hooks install and survive the actual plugin OnDestroy.
+PASS: extra LiveConsole class and ModLog console state are absent.
+PASS: jump limits, repeated side switches, contact-only/landing resets, failed
+attempts, NPC behavior, climbing claws, exception restoration, and logging.
 PASS: ZIP readback and archived DLL match the compiled DLL.
 
-Limitations: stand-ins replace the real Unity engine/world. Native Windows
-console UI/color behavior and real gameplay were not exercised here. The
-console-lifetime regression uses a sentinel console object and no Win32 calls.
-No game or BepInEx assemblies are redistributed in the package.
+LIMITATION: offline checks replace the real Unity engine/world. v1.0.3 has not
+been launched in the actual game here. Proprietary dependencies are not bundled.

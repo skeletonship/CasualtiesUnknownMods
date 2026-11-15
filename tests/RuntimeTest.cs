@@ -14,8 +14,8 @@ class RuntimeTest {
   var events=new List<LogEventArgs>();
   var log=new ManualLogSource("RuntimeTest");
   log.LogEvent+=(sender,e)=>events.Add(e);
-  a.GetType("ThreeWallJumps.ModLog").GetMethod("Initialize",BindingFlags.Static|BindingFlags.NonPublic)
-    .Invoke(null,new object[]{log,false,true});
+  var initialize=a.GetType("ThreeWallJumps.ModLog").GetMethod("Initialize",BindingFlags.Static|BindingFlags.NonPublic);
+  initialize.Invoke(null,initialize.GetParameters().Length==3?new object[]{log,false,true}:new object[]{log,true});
   if(args.Length>=1) {
    using(var game=AssemblyDefinition.ReadAssembly(args[0]))
    using(var mod=AssemblyDefinition.ReadAssembly("ThreeWallJumps.dll")) {
@@ -42,16 +42,16 @@ class RuntimeTest {
   var component=FormatterServices.GetUninitializedObject(pluginType);
   pluginType.GetField("harmony",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(component,harmony);
   var consoleType=a.GetType("ThreeWallJumps.LiveConsole");
-  object consoleSentinel=FormatterServices.GetUninitializedObject(consoleType);
+  object consoleSentinel=consoleType==null?null:FormatterServices.GetUninitializedObject(consoleType);
   var consoleField=a.GetType("ThreeWallJumps.ModLog").GetField("console",BindingFlags.Static|BindingFlags.NonPublic);
-  consoleField.SetValue(null,consoleSentinel);
+  if(consoleField!=null) consoleField.SetValue(null,consoleSentinel);
   pluginType.GetMethod("OnDestroy",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(component,null);
   info=Harmony.GetPatchInfo(typeof(Body).GetMethod("Jump"));
   bool jumpAttached=info!=null && info.Prefixes.Any(p=>p.owner==harmony.Id) && info.Postfixes.Any(p=>p.owner==harmony.Id) && info.Finalizers.Any(p=>p.owner==harmony.Id);
   var contactInfo=Harmony.GetPatchInfo(typeof(Body).GetMethod("HandleGroundedState",BindingFlags.Instance|BindingFlags.NonPublic));
   bool contactAttached=contactInfo!=null && contactInfo.Postfixes.Any(p=>p.owner==harmony.Id);
-  bool consoleRetained=ReferenceEquals(consoleField.GetValue(null),consoleSentinel);
-  consoleField.SetValue(null,null);
+  bool consoleRetained=consoleField!=null && ReferenceEquals(consoleField.GetValue(null),consoleSentinel);
+  if(consoleField!=null) consoleField.SetValue(null,null);
   if(args.Length>=2 && args[1]=="--expect-lifecycle-failure") {
    Check(!jumpAttached && !contactAttached && !consoleRetained,"Expected v1.0.1 lifecycle failure was not reproduced");
    Console.WriteLine("REPRODUCED v1.0.1: plugin destruction removes jump/contact hooks and clears the console.");
@@ -59,8 +59,8 @@ class RuntimeTest {
   }
   Check(jumpAttached,"Plugin destruction removed jump hooks");
   Check(contactAttached,"Plugin destruction removed contact hook");
-  Check(consoleRetained,"Plugin destruction closed the live console");
-  Console.WriteLine("Verified hooks and console survive the actual plugin OnDestroy callback");
+  Check(consoleType==null && consoleField==null,"Extra console implementation remains in the release build");
+  Console.WriteLine("Verified hooks survive OnDestroy; extra console implementation removed");
   var body=new Body(); PlayerCamera.main=new PlayerCamera {body=body};
   foreach(int side in new[]{1,-1,1,-1}) {
    for(int i=1;i<=3;i++) {
