@@ -1,0 +1,4 @@
+PASS: 65 behavior assertions against the compiled DLL
+PASS: patch anchors match the uploaded game assembly
+PASS: compiled Harmony transpiler applied to parsed original Jump IL (no live detour)
+TOTAL PASS: 74 assertions; no live Unity/gameplay test performed.
